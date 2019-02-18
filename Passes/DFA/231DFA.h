@@ -266,7 +266,7 @@ class DataFlowAnalysis {
      *   You may not change anything before "// (2) Initialize the worklist".
      */
     void runWorklistAlgorithm(Function * func) {
-    	std::deque<unsigned> worklist;
+			    	std::deque<unsigned> worklist;
 
     	// (1) Initialize info of each edge to bottom
     	if (Direction)
@@ -277,8 +277,52 @@ class DataFlowAnalysis {
     	assert(EntryInstr != nullptr && "Entry instruction is null.");
 
     	// (2) Initialize the work list
-
+			// Using the Reverse Post Order traversal: 
+			// Add all the instructions in the IndexToInstr
+			
+			std::map<std::unsigned, Instruction *>:: iterator it =  IndexToInstr.begin();
+			while (it != InstrToIndex.end()) {
+				worklist.push_back(it->first);
+			}
+			
     	// (3) Compute until the work list is empty
+			unsigned curr_node;
+			std::vector<unsigned> in_edges;
+			std::vector<unsigned> out_edges;
+			std::vector<Info *> info_out;
+			
+			while (work.size() > 0) {
+			
+				curr_node_idx = worklist.front();
+				
+				Instruction * inst = IndexToInstr[curr_node_idx];
+
+				getIncomingEdges(curr_node_idx, in_edges);
+				getOutgoingEdges(curr_node_idx, out_edges);
+				
+				// pop the curr node from the work list queue
+				worklist.pop_front();
+				
+				// Initialize the in_edges and out_edges vector
+				flowfunction(inst, in_edges, out_edges, infos);
+    
+				// Interating through all the outgoing edges and find out th
+				for (unsigned i = 0; i < info_out.size(); i++) {
+					Info * info_union = new Info();
+					
+					Edge out_edge = std::make_pair(curr_node_idx, out_edges[i]);
+					Info * info_in = EdgeToInfo[out_edge];
+					
+					// Join the nodes
+					Info::join(info_in, infos[i], info_union);
+					
+					if (Info::equals(EdgeToInfo[out_edge], info_union)) {
+						continue;
+					}
+					
+					EdgeToInfo[out_edge] = info_union;
+					worklist.push_back(out_edge.second);
+				}
     }
 };
 

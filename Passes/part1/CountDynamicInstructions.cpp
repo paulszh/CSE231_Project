@@ -1,13 +1,14 @@
 #include "llvm/Pass.h"
+#include "llvm/IR/Type.h"
 #include "llvm/IR/Function.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/IR/InstIterator.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Value.h"
-#include "llvm/IR/Type.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/LLVMContext.h"
 #include<unordered_map>
 #include<vector>
 
@@ -38,8 +39,8 @@ struct CountDynamicInstructions : public FunctionPass {
         
         
         // Iterating through fucntion here
+        // Here B is a pointer to a basic block
         for (Function::iterator B = F.begin(), BE = F.end(); B != BE; ++B) {
-            // Here B is a pointer to a basic block
             unordered_map<int, int> op_count;
             for (BasicBlock::iterator I = B->begin(), IE = B->end(); I != IE; ++I) {
                 op_count[I->getOpcode()]++;
@@ -53,13 +54,15 @@ struct CountDynamicInstructions : public FunctionPass {
             vector <Constant*> keys;
             vector <Constant*> values;
             
+            // Repeat the static instruction count step here
             for (unordered_map<int, int>::iterator it = op_count.begin(); it != op_count.end(); it++) {
-                keys.push_back(ConstantInt::get(Type::getInt32Ty(context), it->first));
-                values.push_back(ConstantInt::get(Type::getInt32Ty(context), it->second));
+                Constant * key = ConstantInt::get(Type::getInt32Ty(context), it->first);
+                Constant * value = ConstantInt::get(Type::getInt32Ty(context), it->second);
+                keys.push_back(key);
+                values.push_back(value);
             }
             
             ArrayType* array_ty = ArrayType::get(Type::getInt32Ty(context), count);
-            Value* indices[2] = {ConstantInt::get(Type::getInt32Ty(context),0), ConstantInt::get(Type::getInt32Ty(context),0)};
 
             GlobalVariable * key_table = new GlobalVariable(*mod, 
                                         array_ty, 
@@ -74,22 +77,21 @@ struct CountDynamicInstructions : public FunctionPass {
                                         ConstantArray::get(array_ty,values), 
                                         "global_values"); 
             
+            Value* indices[2] = {ConstantInt::get(Type::getInt32Ty(context),0), ConstantInt::get(Type::getInt32Ty(context),0)};
+            Value * zero = Builder.CreateInBoundsGEP(key_table, indices);
+            Value * one = Builder.CreateInBoundsGEP(value_table, indices);
+            // initialize the args before calling the update function;
             args.push_back(ConstantInt::get(Type::getInt32Ty(context), count));
-            args.push_back(Builder.CreateInBoundsGEP(key_table, indices));
-            args.push_back(Builder.CreateInBoundsGEP(value_table, indices));
+            args.push_back(zero);
+            args.push_back(one);
             
             Builder.CreateCall(update_func, args);
 
-            if ((string)(B->getTerminator())->getOpcodeName() == "ret") {
-              Builder.CreateCall(print_func);   
+            string opcode = (string)(B->getTerminator())->getOpcodeName();
+            if (opcode == "ret") {
+                // print the count of each instruction before return
+                Builder.CreateCall(print_func);   
             }
-
-            // for (BasicBlock::iterator ist = B->begin(), end = B->end(); ist != end; ++ist) {
-            //         if ((string) ist->getOpcodeName() == "ret") {
-            //             Builder.SetInsertPoint(&*ist);
-            //             Builder.CreateCall(print_func);
-            //         }
-            // }
         }
         return false;
     }

@@ -255,6 +255,14 @@ class DataFlowAnalysis {
 			}
     }
 
+		std::map<Instruction *, unsigned> getInstrToIndexMap() {
+			return InstrToIndex;
+		}
+		
+		std::map<Edge, Info *> getEdgeToInfoMap() {
+			return EdgeToInfo;
+		}
+
     /*
      * This function implements the work list algorithm in the following steps:
      * (1) Initialize info of each edge to bottom
@@ -280,33 +288,32 @@ class DataFlowAnalysis {
 			// Using the Reverse Post Order traversal: 
 			// Add all the instructions in the IndexToInstr
 			
-			std::map<std::unsigned, Instruction *>:: iterator it =  IndexToInstr.begin();
-			while (it != InstrToIndex.end()) {
+			//std::map<std::unsigned, Instruction *>:: iterator it =  IndexToInstr.begin();
+			for (auto it = IndexToInstr.begin(); it != IndexToInstr.end(); it++) {
 				worklist.push_back(it->first);
 			}
 			
 			// (3) Compute until the work list is empty
-			unsigned curr_node;
 			std::vector<unsigned> in_edges;
 			std::vector<unsigned> out_edges;
 			std::vector<Info *> info_out;
 				
-			while (work.size() > 0) {
+			while (worklist.size() > 0) {
 			
-				curr_node_idx = worklist.front();
+				unsigned curr_node_idx = worklist.front();
 				
 				Instruction * inst = IndexToInstr[curr_node_idx];
 
-				getIncomingEdges(curr_node_idx, in_edges);
-				getOutgoingEdges(curr_node_idx, out_edges);
-				
 				// pop the curr node from the work list queue
 				worklist.pop_front();
+				getIncomingEdges(curr_node_idx, &in_edges);
+				getOutgoingEdges(curr_node_idx, &out_edges);
 				
 				// Initialize the in_edges and out_edges vector
-				flowfunction(inst, in_edges, out_edges, infos);
+				flowfunction(inst, in_edges, out_edges, info_out);
 		
-				// Interating through all the outgoing edges and find out th
+				// Interating through all the outgoing edges and check the
+				// union result against the old result
 				for (unsigned i = 0; i < info_out.size(); i++) {
 					Info * info_union = new Info();
 					
@@ -314,7 +321,7 @@ class DataFlowAnalysis {
 					Info * info_in = EdgeToInfo[out_edge];
 					
 					// Join the nodes
-					Info::join(info_in, infos[i], info_union);
+					Info::join(info_in, info_out[i], info_union);
 					
 					if (Info::equals(EdgeToInfo[out_edge], info_union)) {
 						continue;

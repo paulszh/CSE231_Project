@@ -1,7 +1,5 @@
 #include "llvm/Pass.h"
 #include "llvm/IR/Function.h"
-#include "llvm/Support/raw_ostream.h"
-#include "llvm/IR/InstIterator.h"
 #include "231DFA.h"
 #include <set>
 #include <unordered_set>
@@ -52,6 +50,7 @@ class ReachingDefinitionAnalysis : public DataFlowAnalysis <ReachingInfo, true> 
         typedef std::pair<unsigned, unsigned> Edge;
         std::map<Instruction *, unsigned> instr_to_index;
         std::map<Edge, ReachingInfo *> edge_to_info;
+        std::unordered_set<std::string> category_one = {"alloca", "load", "select", "icmp", "fcmp", "getelementptr"};
 
     public:
         
@@ -60,7 +59,6 @@ class ReachingDefinitionAnalysis : public DataFlowAnalysis <ReachingInfo, true> 
         void flowfunction(Instruction * I, std::vector<unsigned> & IncomingEdges, std::vector<unsigned> & OutgoingEdges, std::vector<ReachingInfo *> & Infos) {
             
             int category;
-            std::unordered_set<std::string> category_one = {"alloca", "load", "select", "icmp", "fcmp", "getelementptr"};
             std::string opcode_name = I -> getOpcodeName();
             instr_to_index = getInstrToIndexMap();
             edge_to_info = getEdgeToInfoMap();
@@ -81,12 +79,12 @@ class ReachingDefinitionAnalysis : public DataFlowAnalysis <ReachingInfo, true> 
                 // Second Category: IR instructions that do not return a value
                 category = 2;
             }
-            
+
             // Join all incoming edges for all three categories: 
             for (unsigned i = 0; i < IncomingEdges.size(); i++) {
                 Edge in_edge = std::make_pair(IncomingEdges[i], index);
                 ReachingInfo::join(info_union, edge_to_info[in_edge], info_union);
-            }
+            }       
             
             if (category == 1) {
                 std::set<unsigned> tmp;
@@ -101,7 +99,8 @@ class ReachingDefinitionAnalysis : public DataFlowAnalysis <ReachingInfo, true> 
                 Instruction * first_non_phi_instr = I->getParent()->getFirstNonPHI();
                 std::set<unsigned> tmp;
                 
-                for (unsigned i = index; i < getInstrToIndexMap()[first_non_phi_instr]; i++) {
+                unsigned n = getInstrToIndexMap()[first_non_phi_instr];
+                for (unsigned i = index; i < n; i++) {
                     // add all the phi instructions
                     tmp.insert(i);
                 }
@@ -124,6 +123,7 @@ struct ReachingDefinitionAnalysisPass : public FunctionPass {
         ReachingInfo bottom;
         ReachingInfo initialState;
         ReachingDefinitionAnalysis new_analysis(bottom, initialState);
+
         new_analysis.runWorklistAlgorithm(&F);
         new_analysis.print();
         return false;

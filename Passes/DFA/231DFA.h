@@ -290,26 +290,28 @@ class DataFlowAnalysis {
 			
 			//std::map<std::unsigned, Instruction *>:: iterator it =  IndexToInstr.begin();
 			for (auto it = IndexToInstr.begin(); it != IndexToInstr.end(); it++) {
+				if (it->first == 0) {
+					continue;
+				}
 				worklist.push_back(it->first);
 			}
 			
 			// (3) Compute until the work list is empty
-			std::vector<unsigned> in_edges;
-			std::vector<unsigned> out_edges;
-			std::vector<Info *> info_out;
-				
 			while (worklist.size() > 0) {
 			
 				unsigned curr_node_idx = worklist.front();
 				
-				Instruction * inst = IndexToInstr[curr_node_idx];
+				std::vector<unsigned> in_edges;
+				std::vector<unsigned> out_edges;
+				std::vector<Info *> info_out;
 
 				// pop the curr node from the work list queue
-				worklist.pop_front();
 				getIncomingEdges(curr_node_idx, &in_edges);
 				getOutgoingEdges(curr_node_idx, &out_edges);
+				worklist.pop_front();
 				
 				// Initialize the in_edges and out_edges vector
+				Instruction * inst = IndexToInstr[curr_node_idx];
 				flowfunction(inst, in_edges, out_edges, info_out);
 		
 				// Interating through all the outgoing edges and check the

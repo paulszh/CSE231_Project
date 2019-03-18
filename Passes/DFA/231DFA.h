@@ -305,9 +305,10 @@ class DataFlowAnalysis {
 				std::vector<unsigned> out_edges;
 				std::vector<Info *> info_out;
 
-				// pop the curr node from the work list queue
 				getIncomingEdges(curr_node_idx, &in_edges);
 				getOutgoingEdges(curr_node_idx, &out_edges);
+				
+				// pop the curr node from the work list queue
 				worklist.pop_front();
 				
 				// Initialize the in_edges and out_edges vector
@@ -325,10 +326,12 @@ class DataFlowAnalysis {
 					// Join the nodes
 					Info::join(info_in, info_out[i], info_union);
 					
-					if (Info::equals(EdgeToInfo[out_edge], info_union)) {
+					if (Info::equals(info_in, info_union)) {
+						// equal, stop here
 						continue;
 					}
 					
+					// add the updated the edge index back to the worklist
 					EdgeToInfo[out_edge] = info_union;
 					worklist.push_back(out_edge.second);
 				}

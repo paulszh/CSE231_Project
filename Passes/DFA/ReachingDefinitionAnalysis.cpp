@@ -1,5 +1,4 @@
 #include "llvm/Pass.h"
-#include "llvm/IR/Function.h"
 #include "231DFA.h"
 #include <set>
 #include <unordered_set>
@@ -18,7 +17,7 @@ class ReachingInfo : public Info {
         };
         
         void print() {  
-            for (auto iter = info_set.begin(); iter != info_set.end(); ++iter) {
+            for (auto iter = info_set.begin(); iter != info_set.end(); iter++) {
 				errs() << *iter << '|';
 			}
 			errs() << '\n';
@@ -36,6 +35,7 @@ class ReachingInfo : public Info {
             std::set<unsigned> s1 = info1->info_set;
             std::set<unsigned> s2 = info2->info_set;
             
+            // insert all the elements in s2 to s1
             for (auto iter = s2.begin(); iter != s2.end(); iter++) {
                 s1.insert(*iter);
             }

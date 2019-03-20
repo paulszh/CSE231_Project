@@ -1,5 +1,6 @@
-add_llvm_library( submission_pt2 MODULE
-  ReachingDefinitionAnalysis.cpp
+add_llvm_library( submission_pt3 MODULE
+  ReachingDefinitionAnalysis.cpp 
+  LivenessAnalysis.cpp
   231DFA.h
 
   PLUGIN_TOOL

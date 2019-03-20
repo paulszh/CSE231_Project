@@ -57,12 +57,10 @@ class ReachingDefinitionAnalysis : public DataFlowAnalysis <ReachingInfo, true> 
         ReachingDefinitionAnalysis(ReachingInfo & bottom, ReachingInfo & initialState) : DataFlowAnalysis(bottom, initialState) {}
 
         void flowfunction(Instruction * I, std::vector<unsigned> & IncomingEdges, std::vector<unsigned> & OutgoingEdges, std::vector<ReachingInfo *> & Infos) {
-            
             int category;
             std::string opcode_name = I -> getOpcodeName();
             instr_to_index = getInstrToIndexMap();
             edge_to_info = getEdgeToInfoMap();
-            
             
             unsigned index = instr_to_index[I];
             ReachingInfo * info_union = new ReachingInfo();

@@ -217,7 +217,6 @@ class DataFlowAnalysis {
 		 *   Implement the following function in part 3 for backward analyses
 		 */
 		void initializeBackwardMap(Function * func) {
-			// TODO : refactor the code for this part later
 			assignIndiceToInstrs(func);
 
 			for (Function::iterator bi = func->begin(), e = func->end(); bi != e; ++bi) {
@@ -302,16 +301,18 @@ class DataFlowAnalysis {
     }
 
 
-		// Todo : Working on it later
+		// Getter for Instruction to Index Map
 		std::map<Instruction *, unsigned> getInstrToIndexMap() {
 			return InstrToIndex;
 		}
 		
+		// Getter for EdgeToInfo Map 
 		std::map<Edge, Info *> getEdgeToInfoMap() {
 			return EdgeToInfo;
 		}
 
-		std::map<unsigned, Instruction *> getIndexToInstr() {
+		// Getter for IndexToInstr Map 
+		std::map<unsigned, Instruction *> getIndexToInstrMap() {
 			return IndexToInstr;
 		}
 

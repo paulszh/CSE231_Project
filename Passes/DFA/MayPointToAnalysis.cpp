@@ -103,17 +103,6 @@ class MayPointToAnalysis : public DataFlowAnalysis <MayPointToInfo, true> {
                     MayPointToInfo::join(new MayPointToInfo(r2m), info_join, info_join);
                 }
             }
-            // else if (opcode_name == "getelementptr") {
-                                     
-            //     Instruction * instr = (Instruction *) I -> getOperand(0);
-
-            //     // RI -> X | RV -> X where  Rv is the DFA identifier of <ptrval>.
-            //     if (instr_to_index.find(instr) != instr_to_index.end()) {
-            //         std::string ri = R + std::to_string(instr_to_index[instr]);
-            //         r2m[input].insert(info_join->info_map[ri].begin(), info_join->info_map[ri].end());
-            //         MayPointToInfo::join(new MayPointToInfo(r2m), info_join, info_join);
-            //     }
-            // }
             else if (opcode_name == "load") {
                 Instruction * instr = (Instruction *) I -> getOperand(0);
                 
